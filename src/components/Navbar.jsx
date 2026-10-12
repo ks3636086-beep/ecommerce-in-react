@@ -16,7 +16,8 @@ import {
   LogOut,
   Package,
   BookOpen,
-  PhoneCall
+  PhoneCall,
+  MapPin
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,6 +26,7 @@ export const Navbar = () => {
     cartCount,
     wishlistCount,
     user,
+    orders,
     logoutUser,
     searchQuery,
     setSearchQuery,
@@ -74,12 +76,12 @@ export const Navbar = () => {
   // Filtered search preview
   const searchResults = searchQuery.trim()
     ? products.filter(
-        (p) =>
-          p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.subCategory.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5)
+      (p) =>
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.subCategory.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 5)
     : [];
 
   const handleCategoryClick = (category) => {
@@ -196,21 +198,19 @@ export const Navbar = () => {
 
             <Link
               to="/about"
-              className={`px-3 py-2 text-sm font-medium transition-colors ${
-                location.pathname === '/about'
+              className={`px-3 py-2 text-sm font-medium transition-colors ${location.pathname === '/about'
                   ? 'text-rose-600 font-bold'
                   : 'text-slate-600 hover:text-slate-900'
-              }`}
+                }`}
             >
               About
             </Link>
             <Link
               to="/contact"
-              className={`px-3 py-2 text-sm font-medium transition-colors ${
-                location.pathname === '/contact'
+              className={`px-3 py-2 text-sm font-medium transition-colors ${location.pathname === '/contact'
                   ? 'text-rose-600 font-bold'
                   : 'text-slate-600 hover:text-slate-900'
-              }`}
+                }`}
             >
               Contact
             </Link>
@@ -298,7 +298,7 @@ export const Navbar = () => {
                             key={term}
                             onClick={() => {
                               setSearchQuery(term);
-                              handleSearchSubmit({ preventDefault: () => {} });
+                              handleSearchSubmit({ preventDefault: () => { } });
                             }}
                             className="text-xs px-3 py-1 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 rounded-full font-medium transition"
                           >
@@ -347,28 +347,69 @@ export const Navbar = () => {
                           AURA VIP Member
                         </span>
                       </div>
-                      <Link
-                        to="/checkout"
-                        onClick={() => setIsUserDropdownOpen(false)}
-                        className="w-full flex items-center justify-between p-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition"
-                      >
-                        <span>Profile & Orders</span>
-                        <ChevronRight className="w-4 h-4 text-slate-400" />
-                      </Link>
-                      <Link
-                        to="/wishlist"
-                        onClick={() => setIsUserDropdownOpen(false)}
-                        className="w-full flex items-center justify-between p-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition"
-                      >
-                        <span>My Wishlist ({wishlistCount})</span>
-                        <ChevronRight className="w-4 h-4 text-slate-400" />
-                      </Link>
+
+                      <div className="space-y-0.5">
+                        <Link
+                          to="/profile?tab=details"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="w-full flex items-center justify-between p-2 text-xs font-semibold text-slate-700 hover:text-rose-600 hover:bg-slate-50 rounded-xl transition"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <User className="w-4 h-4 text-slate-400" />
+                            <span>My Profile</span>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                        </Link>
+
+                        <Link
+                          to="/profile?tab=orders"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="w-full flex items-center justify-between p-2 text-xs font-semibold text-slate-700 hover:text-rose-600 hover:bg-slate-50 rounded-xl transition"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Package className="w-4 h-4 text-slate-400" />
+                            <span>My Orders</span>
+                          </div>
+                          {orders?.length > 0 ? (
+                            <span className="text-[10px] font-bold bg-slate-900 text-white px-2 py-0.5 rounded-full">
+                              {orders.length}
+                            </span>
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                          )}
+                        </Link>
+
+                        <Link
+                          to="/profile?tab=addresses"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="w-full flex items-center justify-between p-2 text-xs font-semibold text-slate-700 hover:text-rose-600 hover:bg-slate-50 rounded-xl transition"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <MapPin className="w-4 h-4 text-slate-400" />
+                            <span>Saved Addresses</span>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                        </Link>
+
+                        <Link
+                          to="/wishlist"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="w-full flex items-center justify-between p-2 text-xs font-semibold text-slate-700 hover:text-rose-600 hover:bg-slate-50 rounded-xl transition"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Heart className="w-4 h-4 text-slate-400" />
+                            <span>My Wishlist ({wishlistCount})</span>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                        </Link>
+                      </div>
+
                       <button
                         onClick={() => {
                           logoutUser();
                           setIsUserDropdownOpen(false);
                         }}
-                        className="w-full mt-2 pt-2 border-t border-slate-100 flex items-center gap-2 p-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-xl transition"
+                        className="w-full mt-2 pt-2 border-t border-slate-100 flex items-center gap-2 p-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition"
                       >
                         <LogOut className="w-3.5 h-3.5" />
                         <span>Sign Out</span>
@@ -381,7 +422,7 @@ export const Navbar = () => {
                         To access wishlist, orders and fast checkout
                       </p>
                       <Link
-                        to="/checkout"
+                        to="/login"
                         onClick={() => setIsUserDropdownOpen(false)}
                         className="block w-full py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition"
                       >
@@ -514,7 +555,7 @@ export const Navbar = () => {
                             <p className="text-[10px] text-slate-500">Sign in for member perks</p>
                           </div>
                           <Link
-                            to="/checkout?tab=account"
+                            to="/login"
                             onClick={() => setIsMobileMenuOpen(false)}
                             className="text-[10px] font-black text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg hover:bg-rose-100 transition"
                           >
@@ -574,7 +615,7 @@ export const Navbar = () => {
                       </Link>
 
                       <Link
-                        to="/checkout?tab=orders"
+                        to="/profile?tab=orders"
                         onClick={() => setIsMobileMenuOpen(false)}
                         className="flex items-center justify-between py-2 px-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
                       >
@@ -602,7 +643,7 @@ export const Navbar = () => {
                   {/* Drawer Footer CTA */}
                   <div className="p-4 border-t border-slate-100 bg-slate-50/50">
                     <Link
-                      to="/checkout?tab=account"
+                      to="/profile"
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="w-full flex items-center justify-center gap-2 py-3 bg-slate-900 hover:bg-rose-600 text-white rounded-xl text-xs font-bold tracking-wider transition shadow-md"
                     >

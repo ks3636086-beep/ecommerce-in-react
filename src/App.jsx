@@ -15,6 +15,8 @@ import Cart from './pages/Cart';
 import Wishlist from './pages/Wishlist';
 import CheckoutLogin from './pages/CheckoutLogin';
 import Products from './pages/Products';
+import Login from './pages/login';
+import Profile from './pages/Profile';
 
 // Scroll to top helper on page navigation
 function ScrollToTop() {
@@ -48,6 +50,9 @@ function App() {
               <Route path="/cart" element={<Cart />} />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/checkout" element={<CheckoutLogin />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/account" element={<Navigate to="/profile" replace />} />
+              <Route path="/login" element={<Login />} />
               {/* Fallback to Home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

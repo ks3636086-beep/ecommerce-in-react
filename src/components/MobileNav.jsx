@@ -9,8 +9,10 @@ export const MobileNav = () => {
 
   const isHome = location.pathname === '/';
   const isStories = location.pathname === '/about';
-  const isOrders = location.pathname === '/checkout' && location.search.includes('tab=orders');
-  const isAccount = location.pathname === '/checkout' && !location.search.includes('tab=orders');
+  const isOrders = location.pathname === '/profile' && location.search.includes('tab=orders');
+  const isAccount =
+    (location.pathname === '/profile' && !location.search.includes('tab=orders')) ||
+    location.pathname === '/account';
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 md:hidden py-1.5 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
@@ -39,7 +41,7 @@ export const MobileNav = () => {
 
         {/* 3. Orders */}
         <Link
-          to="/checkout?tab=orders"
+          to="/profile?tab=orders"
           className={`flex flex-col items-center py-1 text-[11px] font-bold relative transition-colors ${
             isOrders ? 'text-rose-600' : 'text-slate-500 hover:text-slate-900'
           }`}
@@ -57,7 +59,7 @@ export const MobileNav = () => {
 
         {/* 4. Account */}
         <Link
-          to="/checkout?tab=account"
+          to="/profile"
           className={`flex flex-col items-center py-1 text-[11px] font-bold transition-colors ${
             isAccount ? 'text-rose-600' : 'text-slate-500 hover:text-slate-900'
           }`}

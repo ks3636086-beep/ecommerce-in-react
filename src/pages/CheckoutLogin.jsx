@@ -725,13 +725,22 @@ export const CheckoutLogin = () => {
                     </div>
                   </div>
 
-                  <button
-                    onClick={logoutUser}
-                    className="p-2.5 rounded-xl border border-slate-200 hover:border-rose-300 text-slate-600 hover:text-rose-600 flex items-center gap-1.5 text-xs font-bold transition"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to="/profile"
+                      className="p-2.5 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 flex items-center gap-1.5 text-xs font-bold transition"
+                    >
+                      <User className="w-4 h-4 text-rose-600" />
+                      <span>Full Profile & Addresses</span>
+                    </Link>
+                    <button
+                      onClick={logoutUser}
+                      className="p-2.5 rounded-xl border border-slate-200 hover:border-rose-300 text-slate-600 hover:text-rose-600 flex items-center gap-1.5 text-xs font-bold transition"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Saved Address Info */}
