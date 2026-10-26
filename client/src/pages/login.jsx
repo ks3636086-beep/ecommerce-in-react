@@ -27,21 +27,65 @@ export default function Login() {
   });
 
   // If already logged in, show quick switch / proceed option
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.email) {
-      showToast('Please enter your email', 'error');
+  
+
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
+
+  const endpoint = isLogin ? 'login' : 'register';
+
+  const body = isLogin
+    ? {
+        email: formData.email,
+        password: formData.password
+      }
+    : {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      };
+
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/auth/${endpoint}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      showToast(data.message || 'Request failed', 'error');
       return;
     }
 
+    if (!isLogin) {
+      showToast('Registration successful! Now sign in.', 'success');
+      setIsLogin(true);
+      return;
+    }
+
+    localStorage.setItem('token', data.token);
+
     loginUser({
-      name: formData.name || formData.email.split('@')[0],
+      name: formData.email.split('@')[0],
       email: formData.email,
-      phone: formData.phone || '+91 98765 43210'
+      phone: ''
     });
 
+    showToast('Login successful!', 'success');
     navigate('/profile');
-  };
+  } catch (error) {
+    showToast('Backend server se connect nahi ho pa raha', 'error');
+  }
+};
+
+
 
   const handleDemoLogin = () => {
     loginUser({
