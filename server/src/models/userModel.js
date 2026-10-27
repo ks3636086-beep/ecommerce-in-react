@@ -19,7 +19,13 @@ const userSchema = new mongoose.Schema({
     city: String,
     state: String,
     zip: String,
-    country: String
+    country: String,
+
+    role: {
+        type: String,
+        enum: ["user", "admin"],
+        default: "user"
+    }
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);

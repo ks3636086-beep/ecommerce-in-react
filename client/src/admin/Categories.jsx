@@ -12,13 +12,10 @@ import {
   Layers,
   Image as ImageIcon
 } from 'lucide-react';
-import {
-  getStoredCategories,
-  saveStoredCategories
-} from './adminMockData';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modal States
@@ -40,9 +37,41 @@ const Categories = () => {
   const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   // Load categories
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/categories",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to load categories");
+      }
+
+      setCategories(
+        data.map((cat) => ({
+          ...cat,
+          id: cat._id,
+          status: cat.isActive ? "Active" : "Inactive",
+          productCount: 0,
+        }))
+      );
+    } catch (error) {
+      setFormError(error.message);
+    }
+  };
+
   useEffect(() => {
-    setCategories(getStoredCategories());
+    fetchCategories();
   }, []);
+
 
   // Filter categories by search
   const filteredCategories = categories.filter((cat) => {
@@ -99,60 +128,140 @@ const Categories = () => {
     });
   };
 
-  // Save (Add or Update) Category
-  const handleSaveCategory = (e) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      setFormError('Category name is required.');
-      return;
-    }
-    if (!formData.slug.trim()) {
-      setFormError('Category slug is required.');
+
+
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setFormError("Please select an image file.");
+      e.target.value = "";
       return;
     }
 
-    let updatedList;
-    if (editingCategory) {
-      // Update existing
-      updatedList = categories.map((cat) =>
-        cat.id === editingCategory.id
-          ? {
-              ...cat,
-              ...formData,
-              name: formData.name.trim(),
-              slug: formData.slug.trim()
-            }
-          : cat
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError("Image size must be under 5 MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setFormError("");
+
+    try {
+      const uploadData = new FormData();
+      uploadData.append("image", file);
+
+      const response = await fetch(
+        "http://localhost:5000/api/uploads/category-image",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+          },
+          body: uploadData,
+        }
       );
-    } else {
-      // Add new
-      const newCategory = {
-        id: `cat-${Date.now()}`,
-        name: formData.name.trim(),
-        slug: formData.slug.trim(),
-        description: formData.description.trim(),
-        status: formData.status,
-        image:
-          formData.image.trim() ||
-          'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400&q=80',
-        productCount: Number(formData.productCount) || 0,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      updatedList = [newCategory, ...categories];
-    }
 
-    setCategories(updatedList);
-    saveStoredCategories(updatedList);
-    setIsModalOpen(false);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Image upload failed.");
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        image: data.imageUrl,
+      }));
+    } catch (error) {
+      setFormError(error.message);
+    } finally {
+      setIsUploadingImage(false);
+      e.target.value = "";
+    }
   };
 
+
+
+
+  // Save (Add or Update) Category
+
+  const handleSaveCategory = async (e) => {
+    e.preventDefault();
+    setFormError("");
+
+    if (!formData.name.trim() || !formData.slug.trim()) {
+      setFormError("Category name and slug are required.");
+      return;
+    }
+
+    try {
+      const isEditing = Boolean(editingCategory);
+
+      const response = await fetch(
+        isEditing
+          ? `http://localhost:5000/api/categories/${editingCategory.id}`
+          : "http://localhost:5000/api/categories",
+        {
+          method: isEditing ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+          },
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            slug: formData.slug.trim().toLowerCase(),
+            description: formData.description.trim(),
+            image: formData.image.trim(),
+            isActive: formData.status === "Active",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to save category.");
+      }
+
+      setIsModalOpen(false);
+      await fetchCategories();
+    } catch (error) {
+      setFormError(error.message);
+    }
+  };
+
+
   // Delete Category
-  const handleConfirmDelete = () => {
+
+  const handleConfirmDelete = async () => {
     if (!categoryToDelete) return;
-    const updatedList = categories.filter((c) => c.id !== categoryToDelete.id);
-    setCategories(updatedList);
-    saveStoredCategories(updatedList);
-    setCategoryToDelete(null);
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/categories/${categoryToDelete.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete category.");
+      }
+
+      setCategoryToDelete(null);
+      await fetchCategories();
+    } catch (error) {
+      setFormError(error.message);
+      setCategoryToDelete(null);
+    }
   };
 
   return (
@@ -271,11 +380,10 @@ const Categories = () => {
                     {/* Status */}
                     <td className="py-3.5 px-4 text-center">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${
-                          cat.status === 'Active'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-slate-100 text-slate-600 border-slate-200'
-                        }`}
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${cat.status === 'Active'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-slate-100 text-slate-600 border-slate-200'
+                          }`}
                       >
                         {cat.status}
                       </span>
@@ -387,13 +495,16 @@ const Categories = () => {
                   Image URL
                 </label>
                 <div className="flex gap-2">
+
                   <input
-                    type="url"
-                    value={formData.image}
-                    onChange={(e) => handleInputChange('image', e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-500 transition"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={isUploadingImage}
                   />
+
+                  {isUploadingImage && <p>Uploading image...</p>}
+
                   {formData.image && (
                     <img
                       src={formData.image}

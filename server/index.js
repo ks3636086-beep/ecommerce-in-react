@@ -10,6 +10,8 @@ import cluster from "cluster";
 import os from "os";
 import productRoutes from "./src/routes/ProductRoutes.js";
 import authRoutes from "./src/routes/AuthRoutes.js";
+import categoryRoutes from "./src/routes/CategoryRoutes.js";
+import uploadRoutes from "./src/routes/UploadRoutes.js";
 
 config();
 
@@ -41,6 +43,8 @@ if (cluster.isPrimary) {
   app.use(morgan("dev"));
   app.use("/api/products", productRoutes);
   app.use("/api/auth", authRoutes);
+  app.use("/api/categories", categoryRoutes);
+  app.use("/api/uploads", uploadRoutes);
 
   app.get("/", (req, res) => {
     res.send("Welcome to Auto Generated Backend!");

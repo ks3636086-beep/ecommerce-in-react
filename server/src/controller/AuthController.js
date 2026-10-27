@@ -71,3 +71,50 @@ export const loginUser = async (req, res) => {
         });
     }
 };
+
+
+
+export const loginAdmin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        const admin = await User.findOne({
+            email,
+            role: "admin"
+        });
+
+        if (!admin) {
+            return res.status(401).json({
+                message: "Invalid admin email or password"
+            });
+        }
+
+        const isMatch = await bcrypt.compare(password, admin.password);
+
+        if (!isMatch) {
+            return res.status(401).json({
+                message: "Invalid admin email or password"
+            });
+        }
+
+        const token = jwt.sign(
+            { userId: admin._id, role: "admin" },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        );
+
+        return res.status(200).json({
+            message: "Admin login successful",
+            token,
+            admin: {
+                name: admin.name,
+                email: admin.email,
+                role: admin.role
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Admin login failed"
+        });
+    }
+};

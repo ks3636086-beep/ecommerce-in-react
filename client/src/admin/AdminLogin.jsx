@@ -34,46 +34,52 @@ const AdminLogin = () => {
     setError('');
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError('');
 
-    // Basic Validation
-    if (!email.trim()) {
-      setError('Please enter your admin email address.');
-      return;
-    }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (!password.trim()) {
-      setError('Please enter your password.');
-      return;
-    }
-    if (password.length < 4) {
-      setError('Password must be at least 4 characters long.');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter email and password.");
       return;
     }
 
     setIsLoading(true);
 
-    // Simulate swift login verification for demo
-    setTimeout(() => {
-      localStorage.setItem('admin_authenticated', 'true');
-      localStorage.setItem(
-        'admin_user',
-        JSON.stringify({
-          email: email.trim(),
-          name: 'Store Administrator',
-          role: 'Super Admin',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'
-        })
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/admin-login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.trim(),
+            password,
+          }),
+        }
       );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Admin login failed.");
+        return;
+      }
+
+      localStorage.setItem("admin_token", data.token);
+      localStorage.setItem("admin_authenticated", "true");
+      localStorage.setItem("admin_user", JSON.stringify(data.admin));
+
+      navigate("/admin");
+    } catch (error) {
+      setError("Backend se connection nahi ho pa raha.");
+    } finally {
       setIsLoading(false);
-      navigate('/admin');
-    }, 600);
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 relative overflow-hidden py-12">

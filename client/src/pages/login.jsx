@@ -27,63 +27,63 @@ export default function Login() {
   });
 
   // If already logged in, show quick switch / proceed option
-  
 
-const handleFormSubmit = async (e) => {
-  e.preventDefault();
 
-  const endpoint = isLogin ? 'login' : 'register';
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
 
-  const body = isLogin
-    ? {
+    const endpoint = isLogin ? 'login' : 'register';
+
+    const body = isLogin
+      ? {
         email: formData.email,
         password: formData.password
       }
-    : {
+      : {
         name: formData.name,
         email: formData.email,
         password: formData.password
       };
 
-  try {
-    const response = await fetch(
-      `http://localhost:5000/api/auth/${endpoint}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/auth/${endpoint}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        showToast(data.message || 'Request failed', 'error');
+        return;
       }
-    );
 
-    const data = await response.json();
+      if (!isLogin) {
+        showToast('Registration successful! Now sign in.', 'success');
+        setIsLogin(true);
+        return;
+      }
 
-    if (!response.ok) {
-      showToast(data.message || 'Request failed', 'error');
-      return;
+      localStorage.setItem('token', data.token);
+
+      loginUser({
+        name: formData.email.split('@')[0],
+        email: formData.email,
+        phone: ''
+      });
+
+      showToast('Login successful!', 'success');
+      navigate('/profile');
+    } catch (error) {
+      showToast('Unable to connect to the backend server.', 'error');
     }
-
-    if (!isLogin) {
-      showToast('Registration successful! Now sign in.', 'success');
-      setIsLogin(true);
-      return;
-    }
-
-    localStorage.setItem('token', data.token);
-
-    loginUser({
-      name: formData.email.split('@')[0],
-      email: formData.email,
-      phone: ''
-    });
-
-    showToast('Login successful!', 'success');
-    navigate('/profile');
-  } catch (error) {
-    showToast('Backend server se connect nahi ho pa raha', 'error');
-  }
-};
+  };
 
 
 
