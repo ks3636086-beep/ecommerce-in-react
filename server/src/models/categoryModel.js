@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const categorySchema = new mongoose.Schema(
@@ -27,6 +26,11 @@ const categorySchema = new mongoose.Schema(
         isActive: {
             type: Boolean,
             default: true,
+        },
+        productCount: {
+            type: Number,
+            default: 0,
+            min: 0,
         },
     },
     { timestamps: true }

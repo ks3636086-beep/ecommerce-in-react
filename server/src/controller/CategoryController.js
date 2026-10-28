@@ -1,10 +1,9 @@
-
 import Category from "../models/categoryModel.js";
 
 // Add Category
 export const createCategory = async (req, res) => {
     try {
-        const { name, slug, description, image, isActive } = req.body;
+        const { name, slug, description, image, isActive, productCount } = req.body;
 
         if (!name?.trim() || !slug?.trim()) {
             return res.status(400).json({
@@ -18,6 +17,7 @@ export const createCategory = async (req, res) => {
             description,
             image,
             isActive: isActive ?? true,
+            productCount: Number(productCount) || 0,
         });
 
         res.status(201).json({
@@ -47,17 +47,23 @@ export const getCategories = async (req, res) => {
 // Update Category
 export const updateCategory = async (req, res) => {
     try {
-        const { name, slug, description, image, isActive } = req.body;
+        const { name, slug, description, image, isActive, productCount } = req.body;
+
+        const updateData = {
+            name: name?.trim(),
+            slug: slug?.trim().toLowerCase(),
+            description,
+            image,
+            isActive,
+        };
+
+        if (productCount !== undefined) {
+            updateData.productCount = Number(productCount) || 0;
+        }
 
         const category = await Category.findByIdAndUpdate(
             req.params.id,
-            {
-                name: name?.trim(),
-                slug: slug?.trim().toLowerCase(),
-                description,
-                image,
-                isActive,
-            },
+            updateData,
             { new: true, runValidators: true }
         );
 

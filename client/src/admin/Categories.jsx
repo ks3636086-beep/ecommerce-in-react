@@ -60,7 +60,7 @@ const Categories = () => {
           ...cat,
           id: cat._id,
           status: cat.isActive ? "Active" : "Inactive",
-          productCount: 0,
+         productCount: cat.productCount ?? 0,
         }))
       );
     } catch (error) {
@@ -86,12 +86,13 @@ const Categories = () => {
   // Open Modal for Add
   const handleOpenAddModal = () => {
     setEditingCategory(null);
+    setIsUploadingImage(false);
     setFormData({
       name: '',
       slug: '',
       description: '',
       status: 'Active',
-      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400&q=80',
+      image: '',
       productCount: 0
     });
     setFormError('');
@@ -101,6 +102,7 @@ const Categories = () => {
   // Open Modal for Edit
   const handleOpenEditModal = (cat) => {
     setEditingCategory(cat);
+    setIsUploadingImage(false);
     setFormData({
       name: cat.name,
       slug: cat.slug,
@@ -132,18 +134,19 @@ const Categories = () => {
 
 
   const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
+    const inputElement = e.target;
+    const file = inputElement?.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
       setFormError("Please select an image file.");
-      e.target.value = "";
+      if (inputElement) inputElement.value = "";
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
       setFormError("Image size must be under 5 MB.");
-      e.target.value = "";
+      if (inputElement) inputElement.value = "";
       return;
     }
 
@@ -179,7 +182,9 @@ const Categories = () => {
       setFormError(error.message);
     } finally {
       setIsUploadingImage(false);
-      e.target.value = "";
+      if (inputElement) {
+        inputElement.value = "";
+      }
     }
   };
 
@@ -190,6 +195,7 @@ const Categories = () => {
 
   const handleSaveCategory = async (e) => {
     e.preventDefault();
+    if (isUploadingImage) return;
     setFormError("");
 
     if (!formData.name.trim() || !formData.slug.trim()) {
@@ -199,10 +205,11 @@ const Categories = () => {
 
     try {
       const isEditing = Boolean(editingCategory);
+      const categoryId = editingCategory?.id || editingCategory?._id;
 
       const response = await fetch(
         isEditing
-          ? `http://localhost:5000/api/categories/${editingCategory.id}`
+          ? `http://localhost:5000/api/categories/${categoryId}`
           : "http://localhost:5000/api/categories",
         {
           method: isEditing ? "PUT" : "POST",
@@ -213,9 +220,10 @@ const Categories = () => {
           body: JSON.stringify({
             name: formData.name.trim(),
             slug: formData.slug.trim().toLowerCase(),
-            description: formData.description.trim(),
-            image: formData.image.trim(),
+            description: (formData.description || '').trim(),
+            image: (formData.image || '').trim(),
             isActive: formData.status === "Active",
+            productCount: Number(formData.productCount) || 0,
           }),
         }
       );
@@ -240,8 +248,9 @@ const Categories = () => {
     if (!categoryToDelete) return;
 
     try {
+      const categoryId = categoryToDelete?.id || categoryToDelete?._id;
       const response = await fetch(
-        `http://localhost:5000/api/categories/${categoryToDelete.id}`,
+        `http://localhost:5000/api/categories/${categoryId}`,
         {
           method: "DELETE",
           headers: {
@@ -502,6 +511,7 @@ const Categories = () => {
                     onChange={handleImageUpload}
                     disabled={isUploadingImage}
                   />
+                  
 
                   {isUploadingImage && <p>Uploading image...</p>}
 
@@ -555,7 +565,8 @@ const Categories = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 transition shadow-sm"
+                  disabled={isUploadingImage}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {editingCategory ? 'Update Category' : 'Create Category'}
                 </button>
